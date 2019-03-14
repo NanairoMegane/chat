@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -35,10 +36,23 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t.temp1 =
 			template.Must(template.ParseFiles(abs + t.filename))
 	})
-	t.temp1.Execute(w, nil)
+
+	// テンプレートにレスポンスの入れ物とリクエストの入れ物を渡す。
+	// リクエストの中身には、コマンドラインからの入力内容が含まれる。
+	// Template.Execute() : テンプレートの内容をwriterに書き込む
+	t.temp1.Execute(w, r)
 }
 
 func main() {
+
+	/* コマンドラインからポート番号を読み込む */
+	// flagパッケージ：コマンドラインからフラグを読み込みパースする
+	// flag.String(): フラグを指定名、デフォルト値、Usageで定義する。
+	var addr = flag.String("addr", ":8080", "アプリケーションのアドレス")
+	// flag.Parse : コマンドラインの[1:]からフラグを読み込む。
+	// これはフラグの定義後、かつプログラムの実行にされなければいけない。
+	flag.Parse()
+
 	// ルートへのアクセスに対して、chat.htmlを返却する。
 	// ハンドラには独自ハンドラを使用する。templateHandleはServeHTTPを実装しているのでインターフェースに適合している。
 	/*
@@ -53,6 +67,7 @@ func main() {
 	/* チャットルームを開始する */
 	// 新規roomを作成
 	r := newRoom()
+	//r.tracer = trace.New(os.Stdout)
 
 	// /roomディレクトリにハンドラを張る。
 	// ここへの直接アクセスは行われず、jsから誘導される。
@@ -64,6 +79,7 @@ func main() {
 
 	/* webサーバを開始する */
 	// listenするのは8080のルートだけ。
+	log.Println("Webサーバを開始します。ポート：", *addr)
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal("ListenAndServe", err)
 	}

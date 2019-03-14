@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"../trace"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -19,6 +21,7 @@ type room struct {
 	join    chan *client
 	leave   chan *client
 	clients map[*client]bool
+	tracer  trace.Tracer
 }
 
 /*
@@ -34,18 +37,23 @@ func (r *room) run() {
 		//入室
 		case client := <-r.join:
 			r.clients[client] = true
+			r.tracer.Trace("新しいクライアントが入室しました。")
 		//退室
 		case client := <-r.leave:
 			delete(r.clients, client)
 			close(client.send)
+			r.tracer.Trace("クライアントが退室しました。")
 		//メッセージの送信
 		case msg := <-r.forward:
+			r.tracer.Trace("新しいメッセージを受信しました。:", string(msg))
 			for client := range r.clients {
 				select {
 				case client.send <- msg:
+					r.tracer.Trace("クライアントに送信されました。")
 				default:
 					delete(r.clients, client)
 					close(client.send)
+					r.tracer.Trace("送信に失敗しました。")
 				}
 			}
 		}
@@ -100,5 +108,6 @@ func newRoom() *room {
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
+		tracer:  trace.Off(),
 	}
 }
