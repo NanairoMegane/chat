@@ -4,9 +4,16 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
 	"text/template"
+
+	"github.com/stretchr/objx"
+
+	"../trace"
+	"github.com/stretchr/gomniauth"
+	"github.com/stretchr/gomniauth/providers/google"
 )
 
 /*
@@ -37,10 +44,17 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			template.Must(template.ParseFiles(abs + t.filename))
 	})
 
+	data := map[string]interface{}{
+		"Host": r.Host,
+	}
+	if authCookie, err := r.Cookie("auth"); err == nil {
+		data["UserData"] = objx.MustFromBase64(authCookie.Value)
+	}
+
 	// テンプレートにレスポンスの入れ物とリクエストの入れ物を渡す。
 	// リクエストの中身には、コマンドラインからの入力内容が含まれる。
 	// Template.Execute() : テンプレートの内容をwriterに書き込む
-	t.temp1.Execute(w, r)
+	t.temp1.Execute(w, data)
 }
 
 func main() {
@@ -53,6 +67,15 @@ func main() {
 	// これはフラグの定義後、かつプログラムの実行にされなければいけない。
 	flag.Parse()
 
+	/* Gomniauth の設定 */
+	gomniauth.SetSecurityKey("chattest3594")
+	gomniauth.WithProviders(
+		google.New("405254153423-ueimm9ll44q24s00ctrvcn1v2s1j9su5.apps.googleusercontent.com",
+			"o5lSpqQLVHv8NAk4ok1cCwRy",
+			"http://localhost:8080/auth/callback/google",
+		),
+	)
+
 	// ルートへのアクセスに対して、chat.htmlを返却する。
 	// ハンドラには独自ハンドラを使用する。templateHandleはServeHTTPを実装しているのでインターフェースに適合している。
 	/*
@@ -62,12 +85,18 @@ func main() {
 		        		ServeHTTP(ResponseWriter, *Request)
 					}
 	*/
-	http.Handle("/", &templateHandler{filename: "/chat.html"})
+	http.Handle("/", MustAuth(&templateHandler{filename: "/chat.html"}))
+
+	/* ログインページ */
+	http.Handle("/login", &templateHandler{filename: "/login.html"})
+
+	/* 認証機能 */
+	http.HandleFunc("/auth/", loginHandler)
 
 	/* チャットルームを開始する */
 	// 新規roomを作成
 	r := newRoom()
-	//r.tracer = trace.New(os.Stdout)
+	r.tracer = trace.New(os.Stdout)
 
 	// /roomディレクトリにハンドラを張る。
 	// ここへの直接アクセスは行われず、jsから誘導される。
