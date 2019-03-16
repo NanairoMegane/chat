@@ -105,6 +105,10 @@ func main() {
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	})
 
+	/* アップロード機能 */
+	http.Handle("/upload", &templateHandler{filename: "/upload.html"})
+	http.HandleFunc("/uploader", uploaderHandler)
+
 	/* チャットルームを開始する */
 	// 新規roomを作成
 	r := newRoom(UseGravatar)
