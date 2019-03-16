@@ -24,6 +24,7 @@ type room struct {
 	leave   chan *client
 	clients map[*client]bool
 	tracer  trace.Tracer
+	avatar  Avatar
 }
 
 /*
@@ -110,11 +111,12 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 /*
 新規room作成のヘルパー・メソッド
 */
-func newRoom() *room {
+func newRoom(avatar Avatar) *room {
 	return &room{
 		forward: make(chan *message),
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
+		avatar:  avatar,
 	}
 }

@@ -95,7 +95,7 @@ func main() {
 
 	/* チャットルームを開始する */
 	// 新規roomを作成
-	r := newRoom()
+	r := newRoom(UseAuthAvatar)
 	r.tracer = trace.New(os.Stdout)
 
 	// /roomディレクトリにハンドラを張る。
