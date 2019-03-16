@@ -1,7 +1,11 @@
 package main
 
 import (
+	"crypto/md5"
 	"errors"
+	"fmt"
+	"io"
+	"strings"
 )
 
 // インスタンスがアバター画像を取得できない時のエラーメッセージ
@@ -29,6 +33,24 @@ func (_ AuthAvatar) GetAvatarURL(c *client) (string, error) {
 		// URLを正常に文字列に変換できるか
 		if urlStr, ok := url.(string); ok {
 			return urlStr, nil
+		}
+	}
+	return "", ErrNoAvatarURL
+}
+
+/*
+Gravatar 画像取得用の構造体(空)
+*/
+type GravatarAvatar struct{}
+
+var UseGravatar GravatarAvatar
+
+func (_ GravatarAvatar) GetAvatarURL(c *client) (string, error) {
+	if email, ok := c.userData["email"]; ok {
+		if emailStr, ok := email.(string); ok {
+			m := md5.New()
+			io.WriteString(m, strings.ToLower(emailStr))
+			return fmt.Sprintf("//www.gravatar.com/avatar/%x", m.Sum(nil)), nil
 		}
 	}
 	return "", ErrNoAvatarURL
