@@ -31,6 +31,12 @@ func (c *client) read() {
 		if err := c.socket.ReadJSON(&msg); err == nil {
 			msg.When = time.Now()
 			msg.Name = c.userData["name"].(string)
+			if avatarURL, ok := c.userData["avatar_url"]; ok {
+				msg.AvatarURL = avatarURL.(string)
+				//log.Fatal("avataURL is there.", avatarURL)
+			} else {
+				//log.Fatal("avatarURL is none.")
+			}
 			c.room.forward <- msg
 			//if _, msg, err := c.socket.ReadMessage(); err == nil {
 			//	c.room.forward <- msg
