@@ -109,9 +109,14 @@ func main() {
 	http.Handle("/upload", &templateHandler{filename: "/upload.html"})
 	http.HandleFunc("/uploader", uploaderHandler)
 
+	/* プロフィール画像管理機能 */
+	http.Handle("/avatars/",
+		http.StripPrefix("/avatars/",
+			http.FileServer(http.Dir("./chat/avatars"))))
+
 	/* チャットルームを開始する */
 	// 新規roomを作成
-	r := newRoom(UseGravatar)
+	r := newRoom(UseFileSystemAvatar)
 	r.tracer = trace.New(os.Stdout)
 
 	// /roomディレクトリにハンドラを張る。

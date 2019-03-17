@@ -9,8 +9,23 @@ import (
 	"strings"
 
 	"github.com/stretchr/gomniauth"
+	gomniauthcommon "github.com/stretchr/gomniauth/common"
 	"github.com/stretchr/objx"
 )
+
+type ChatUser interface {
+	UniqueID() string
+	AvatarURL() string
+}
+
+type charUser struct {
+	gomniauthcommon.User
+	uniqueID string
+}
+
+func (u charUser) UniqueID() string {
+	return u.uniqueID
+}
 
 /*
 次に行うべきハンドラをラップする、認証用の構造体

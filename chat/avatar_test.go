@@ -1,6 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -45,5 +48,23 @@ func TestGravatarAvatar(t *testing.T) {
 	}
 	if url != "//www.gravatar.com/avatar/8dbd58ddaaa47b6bdd6cbd4f5d7d90e4" {
 		t.Errorf("正しくないURLを取得しました: %s", url)
+	}
+}
+
+func TestFileSystemAvatar(t *testing.T) {
+	filename, _ := filepath.Abs("./chat/avatars/")
+	filename += "/" + "abc.jpg"
+	ioutil.WriteFile(filename, []byte{}, 0777)
+	defer func() { os.Remove(filename) }()
+
+	var fileSystemAvatar FileSystemAvatar
+	client := new(client)
+	client.userData = map[string]interface{}{"userid": "abc"}
+	url, err := fileSystemAvatar.GetAvatarURL(client)
+	if err != nil {
+		t.Error("エラーを返すべきではありません。")
+	}
+	if url != filename {
+		t.Errorf("誤ったURLを返しました。 %s :", url)
 	}
 }

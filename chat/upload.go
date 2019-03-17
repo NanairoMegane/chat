@@ -5,12 +5,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
-	"regexp"
 )
 
 func uploaderHandler(w http.ResponseWriter, req *http.Request) {
 	userid := req.FormValue("userid")
-	file, header, err := req.FormFile("avatarFile")
+	file, _, err := req.FormFile("avatarFile")
 	if err != nil {
 		io.WriteString(w, err.Error())
 		return
@@ -21,12 +20,10 @@ func uploaderHandler(w http.ResponseWriter, req *http.Request) {
 		io.WriteString(w, err.Error())
 		return
 	}
-	filename, _ := filepath.Abs("./templates/avatars/")
-	filename += "/" + userid + "/" + header.Filename
-	println(filename)
-	rep := regexp.MustCompile(".jpg")
-	filename = rep.ReplaceAllString(filename, "")
-	println(filename)
+
+	filename, _ := filepath.Abs("./chat/avatars/")
+	filename += "/" + userid + ".jpg" //+ header.Filename
+
 	err = ioutil.WriteFile(filename, data, 0777)
 	if err != nil {
 		io.WriteString(w, err.Error())
