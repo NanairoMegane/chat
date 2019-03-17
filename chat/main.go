@@ -16,6 +16,12 @@ import (
 	"github.com/stretchr/gomniauth/providers/google"
 )
 
+var avatars Avatar = TryAvatars{
+	UseAuthAvatar,
+	UseGravatar,
+	UseFileSystemAvatar,
+}
+
 /*
 テンプレートのハンドラ。
 	once     : テンプレートを一度だけコンパイルする
@@ -116,7 +122,7 @@ func main() {
 
 	/* チャットルームを開始する */
 	// 新規roomを作成
-	r := newRoom(UseFileSystemAvatar)
+	r := newRoom()
 	r.tracer = trace.New(os.Stdout)
 
 	// /roomディレクトリにハンドラを張る。

@@ -18,12 +18,12 @@ type ChatUser interface {
 	AvatarURL() string
 }
 
-type charUser struct {
+type chatUser struct {
 	gomniauthcommon.User
 	uniqueID string
 }
 
-func (u charUser) UniqueID() string {
+func (u chatUser) UniqueID() string {
 	return u.uniqueID
 }
 
@@ -98,14 +98,21 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln("ユーザの取得に失敗しました。: ", provider, "-", err)
 		}
+
+		chatUser := &chatUser{User: user}
 		m := md5.New()
-		//io.WriteString(m, strings.ToLower(user.Name()))
-		io.WriteString(m, strings.ToLower(user.Email()))
-		userID := fmt.Sprintf("%x", m.Sum(nil))
+		io.WriteString(m, strings.ToLower(user.Name()))
+		chatUser.uniqueID = fmt.Sprintf("%x", m.Sum(nil))
+
+		avatarURL, err := avatars.GetAvatarURL(chatUser)
+		if err != nil {
+			log.Fatalln("GETAvatarURLに失敗しました")
+		}
+
 		authCookieValue := objx.New(map[string]interface{}{
-			"userid":     userID,
+			"userid":     chatUser.uniqueID,
 			"name":       user.Name(),
-			"avatar_url": user.AvatarURL(),
+			"avatar_url": avatarURL,
 			"email":      user.Email(),
 		}).MustBase64()
 		http.SetCookie(w, &http.Cookie{
