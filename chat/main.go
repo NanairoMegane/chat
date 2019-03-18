@@ -74,10 +74,11 @@ func main() {
 	flag.Parse()
 
 	/* Gomniauth の設定 */
-	gomniauth.SetSecurityKey("chattest3594")
+	gomniauth.SetSecurityKey(SecurityKey)
 	gomniauth.WithProviders(
-		google.New("405254153423-ueimm9ll44q24s00ctrvcn1v2s1j9su5.apps.googleusercontent.com",
-			"o5lSpqQLVHv8NAk4ok1cCwRy",
+		google.New(
+			ClientId,
+			ClientSecurity,
 			"http://localhost:8080/auth/callback/google",
 		),
 	)
